@@ -107,6 +107,8 @@ rst_epilog = """
 
 .. |Font| replace:: :class:`.Font`
 
+.. |_Footer| replace:: :class:`._Footer`
+
 .. |_Header| replace:: :class:`._Header`
 
 .. |Inches| replace:: :class:`.Inches`
