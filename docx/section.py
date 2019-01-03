@@ -219,6 +219,17 @@ class _BaseHeaderFooter(BlockItemContainer):
         self._document_part = document_part
 
     @property
+    def part(self):
+        """The |HeaderPart| or |FooterPart| for this header/footer.
+
+        This overrides `BlockItemContainer.part` and is required to support image
+        insertion and perhaps other content like hyperlinks.
+        """
+        # ---should not appear in documentation;
+        # ---not an interface property, even though public
+        return self._get_or_add_definition()
+
+    @property
     def is_linked_to_previous(self):
         """True if this header/footer uses the definition from the preceding section.
 

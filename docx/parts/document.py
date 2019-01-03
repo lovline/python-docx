@@ -6,17 +6,16 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 from docx.document import Document
 from docx.opc.constants import RELATIONSHIP_TYPE as RT
-from docx.opc.part import XmlPart
-from docx.oxml.shape import CT_Inline
 from docx.parts.hdrftr import FooterPart, HeaderPart
 from docx.parts.numbering import NumberingPart
 from docx.parts.settings import SettingsPart
+from docx.parts.story import BaseStoryPart
 from docx.parts.styles import StylesPart
 from docx.shape import InlineShapes
 from docx.shared import lazyproperty
 
 
-class DocumentPart(XmlPart):
+class DocumentPart(BaseStoryPart):
     """Main document part of a WordprocessingML (WML) package, aka a .docx file.
 
     Acts as broker to other parts such as image, core properties, and style parts. It
@@ -60,20 +59,6 @@ class DocumentPart(XmlPart):
         """Return |FooterPart| related by *rId*."""
         return self.related_parts[rId]
 
-    def get_or_add_image(self, image_descriptor):
-        """
-        Return an (rId, image) 2-tuple for the image identified by
-        *image_descriptor*. *image* is an |Image| instance providing access
-        to the properties of the image, such as dimensions and image type.
-        *rId* is the key for the relationship between this document part and
-        the image part, reused if already present, newly created if not.
-        """
-        image_part = self._package.image_parts.get_or_add_image_part(
-            image_descriptor
-        )
-        rId = self.relate_to(image_part, RT.IMAGE)
-        return rId, image_part.image
-
     def get_style(self, style_id, style_type):
         """
         Return the style in this document matching *style_id*. Returns the
@@ -103,31 +88,6 @@ class DocumentPart(XmlPart):
         document.
         """
         return InlineShapes(self._element.body, self)
-
-    def new_pic_inline(self, image_descriptor, width, height):
-        """Return a newly-created `w:inline` element.
-
-        The element contains the image specified by *image_descriptor* and is scaled
-        based on the values of *width* and *height*.
-        """
-        rId, image = self.get_or_add_image(image_descriptor)
-        cx, cy = image.scaled_dimensions(width, height)
-        shape_id, filename = self.next_id, image.filename
-        return CT_Inline.new_pic_inline(shape_id, rId, filename, cx, cy)
-
-    @property
-    def next_id(self):
-        """Next available positive integer id value in this document.
-
-        Calculated by incrementing maximum existing id value. Gaps in the
-        existing id sequence are not filled. The id attribute value is unique
-        in the document, without regard to the element type it appears on.
-        """
-        id_str_lst = self._element.xpath('//@id')
-        used_ids = [int(id_str) for id_str in id_str_lst if id_str.isdigit()]
-        if not used_ids:
-            return 1
-        return max(used_ids) + 1
 
     @lazyproperty
     def numbering_part(self):
